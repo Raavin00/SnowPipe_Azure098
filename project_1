@@ -1,0 +1,72 @@
+CREATE DATABASE IF NOT EXISTS MYDB1;
+CREATE SCHEMA IF NOT EXISTS MYDB1.snow_land;
+
+
+CREATE OR REPLACE TABLE customer (
+    
+    emp_id INTEGER,
+    name VARCHAR(20),
+    salary INTEGER
+);
+
+
+
+
+CREATE OR REPLACE file format fileformat_1
+    type = csv
+    field_delimiter = ','
+    skip_header = 1
+    field_optionally_enclosed_by='"';
+
+
+
+
+create notification integration snowpipe_event_1
+type=queue
+notification_provider=azure_storage_queue
+enabled=true
+azure_storage_queue_primary_uri='https://snowflakesnowpipe123.queue.core.windows.net/snowflakequeuepoc'
+azure_tenant_id='4e0ff67d-11f4-46e3-9d02-fa5ac7aa316f';
+
+
+
+
+show integrations;
+
+desc integration snowpipe_event_1;
+
+
+
+create stage cust_stage
+url='azure://snowflakesnowpipe123.blob.core.windows.net/project'
+credentials=(azure_sas_token='
+sv=2022-11-02&ss=bfqt&srt=co&sp=rwlacupiytfx&se=2024-08-31T20:40:19Z&st=2024-08-31T12:40:19Z&spr=https&sig=u3PzCEm%2BO1unpcbZiIQ2PCVRipTgr7i5hTjwhfUYq%2Bk%3D
+')
+
+
+
+show stages;
+
+ls @cust_stage;
+
+select $1 ,$2 from @cust_stage;
+
+
+
+create pipe pipe_stage_customer
+auto_ingest=true
+integration=snowpipe_event_1
+as
+copy into customer 
+from @cust_stage
+file_format=fileformat_1;
+
+select * from customer;
+
+
+
+
+
+
+
+
